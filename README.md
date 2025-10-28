@@ -64,5 +64,7 @@ sms_spam_project/
 Run first the 'environement-requirements.yml' file in order to create the environement and install the requirements
 by running:
 
-'mamba env create -f environment.yml
-mamba activate advanced-statistical-learning'
+
+mamba env create -f environment.yml
+
+mamba activate advanced-statistical-learning
