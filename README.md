@@ -59,3 +59,10 @@ sms_spam_project/
 └── data/                      # optional folder for local CSV input (label,text) if not downloaded in code
 
 
+### HOW TO RUN
+
+Run first the 'environement-requirements.yml' file in order to create the environement and install the requirements
+by running:
+
+'mamba env create -f environment.yml
+mamba activate advanced-statistical-learning'
