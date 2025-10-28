@@ -1,0 +1,16 @@
+name: advanced-statistical-learning
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - statsmodels
+  - matplotlib
+  - seaborn
+  - joblib
+  - tqdm
+  - jupyterlab
+  - ipykernel
