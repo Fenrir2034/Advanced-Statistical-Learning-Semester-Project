@@ -36,27 +36,53 @@ If the dataset is not present locally, it will be **automatically downloaded** b
 ---
 
 ### Structure
-sms_spam_project/
-│
+sms_svm_project/
 
-├── sms_spam_project.py        # main training & evaluation script
+├─ README.md
 
-├── requirements.txt           # dependencies
+├─ requirements.txt
 
-├── outputs/                   # auto-created folder with results (plots, metrics)
+├─ LICENSE
 
-│   ├── logit_confusion_matrix.png
+├─ .gitignore
 
-│   ├── linear_svm_roc.png
+├─ src/
 
-│   ├── pr_all.png
+│ ├─ preprocessing.py
 
-│   └── metrics_summary.csv
+│ ├─ models.py
 
-│
-├── README.md                  # project documentation
+│ ├─ metrics.py
 
-└── data/                      # optional folder for local CSV input (label,text) if not downloaded in code
+│ └─ visualization.py
+
+├─ train.py
+
+├─ evaluate.py
+
+├─ bootstrap_eval.py
+
+├─ scripts/
+
+│ └─ run_experiments.sh
+
+├─ data/
+
+│ └─ (auto-downloaded) or place sms.csv with columns: label,text
+
+├─ outputs/
+
+│ ├─ models/
+
+│ └─ figures/
+
+├─ notebooks/
+
+│ └─ Exploration.ipynb
+
+└─ tests/
+
+└─ test_smoke.py
 
 
 ### HOW TO RUN
