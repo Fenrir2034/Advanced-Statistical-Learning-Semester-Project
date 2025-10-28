@@ -35,4 +35,17 @@ If the dataset is not present locally, it will be **automatically downloaded** b
 
 ---
 
-## 🧠 Project Structure
+### Structure
+sms_spam_project/
+│
+├── sms_spam_project.py        # main training & evaluation script
+├── requirements.txt           # dependencies
+├── outputs/                   # auto-created folder with results (plots, metrics)
+│   ├── logit_confusion_matrix.png
+│   ├── linear_svm_roc.png
+│   ├── pr_all.png
+│   └── metrics_summary.csv
+│
+├── README.md                  # project documentation
+└── data/                      # optional folder for local CSV input (label,text) if not downloaded in code
+
