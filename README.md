@@ -3,7 +3,7 @@ Final project for the advanced statistical learning class of 2025-2026.
 
 # SMS Spam Classification using Machine Learning - PYTHON -
 
-This repository contains a complete end-to-end **machine learning pipeline** for detecting spam text messages (SMS).  
+This repository contains **machine learning pipeline** for detecting spam text messages (SMS).  
 It demonstrates **text preprocessing**, **TF-IDF vectorization**, **model selection**, and **resampling-based evaluation** (cross-validation and ROC/PR analysis) using Python.
 
 ---
