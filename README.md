@@ -84,7 +84,28 @@ sms_svm_project/
 
 └─ test_smoke.py
 
+## Quick start (for reviewers)
 
+```bash
+git clone https://github.com/<yourorg>/Advanced-Statistical-Learning-Semester-Project.git
+cd Advanced-Statistical-Learning-Semester-Project
+
+# Option A: conda/mamba
+./scripts/setup_env.sh
+conda activate advanced-statistical-learning
+./scripts/run_all.sh
+
+# Option B: Docker (no local Python needed)
+docker build -t asl-project .
+docker run --rm -v "$PWD/outputs":/app/outputs asl-project
+```
+This will:
+
+download the SMS Spam dataset into data/sms_spam.csv (first run)
+
+train models, run bootstrap, and evaluation
+
+write plots/metrics into outputs/
 ### HOW TO RUN
 
 Run first the 'environement-requirements.yml' file in order to create the environement and install the requirements
