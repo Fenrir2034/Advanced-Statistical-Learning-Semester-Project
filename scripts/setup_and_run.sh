@@ -123,3 +123,42 @@ $RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/TF-IDF_SVM_RB
 echo "==> DONE."
 echo "Figures  -> outputs/figures/"
 echo "Models   -> outputs/models/"
+# --- 6) Visualize QDA discriminant scores ------------------------------
+#from sklearn.preprocessing import LabelEncoder
+
+#print("==> Generating QDA projection plots...")
+
+# Encode classes as 0/1 explicitly
+le = LabelEncoder()
+y_train_enc = le.fit_transform(y_train)
+y_test_enc = le.transform(y_test)
+
+qda = QuadraticDiscriminantAnalysis(reg_param=0.1)
+qda.fit(X_train_num, y_train_enc)
+
+# QDA does not have a transform(), but we can use the log-posterior ratios
+qda_scores_train = qda.predict_proba(X_train_num)[:, 1]  # probability of "spam"
+qda_scores_test  = qda.predict_proba(X_test_num)[:, 1]
+
+plt.figure(figsize=(7,4))
+plt.hist(qda_scores_train[y_train_enc==0], bins=30, alpha=0.6, label="ham (train)", density=True)
+plt.hist(qda_scores_train[y_train_enc==1], bins=30, alpha=0.6, label="spam (train)", density=True)
+plt.title("QDA discriminant projection (train)")
+plt.xlabel("Posterior probability of 'spam'")
+plt.ylabel("Density")
+plt.legend()
+plt.tight_layout()
+plt.savefig(outdir / "qda_train_hist.png", dpi=150)
+
+plt.figure(figsize=(7,4))
+plt.hist(qda_scores_test[y_test_enc==0], bins=30, alpha=0.6, label="ham (test)", density=True)
+plt.hist(qda_scores_test[y_test_enc==1], bins=30, alpha=0.6, label="spam (test)", density=True)
+plt.title("QDA discriminant projection (test)")
+plt.xlabel("Posterior probability of 'spam'")
+plt.ylabel("Density")
+plt.legend()
+plt.tight_layout()
+plt.savefig(outdir / "qda_test_hist.png", dpi=150)
+
+print(" - outputs/figures/qda_train_hist.png")
+print(" - outputs/figures/qda_test_hist.png")

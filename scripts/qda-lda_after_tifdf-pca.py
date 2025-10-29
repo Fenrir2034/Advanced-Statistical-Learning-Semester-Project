@@ -80,7 +80,11 @@ print(classification_report(y_test, y_pred_qda, digits=3))
 print(confusion_matrix(y_test, y_pred_qda))
 
 # --- 5) Visualize the 1D LDA projection as histograms ------------------------
-outdir = Path("outputs/figures"); outdir.mkdir(parents=True, exist_ok=True)
+# Always save under the project root, not the scripts directory
+project_root = Path(__file__).resolve().parents[1]
+outdir = project_root / "outputs" / "figures"
+outdir.mkdir(parents=True, exist_ok=True)
+
 
 num_transform = SkPipeline(steps=[("tfidf", tfidf), ("svd", svd), ("scaler", scaler)])
 X_train_num = num_transform.fit_transform(X_train, y_train)  # fit on train only
@@ -108,3 +112,91 @@ plt.savefig(outdir / "lda_test_hist.png", dpi=150)
 print("Saved:")
 print(" - outputs/figures/lda_train_hist.png")
 print(" - outputs/figures/lda_test_hist.png")
+
+# --- 6) QDA decision boundaries in 2D (via SVD to 2 comps) -------------------
+# Fit transforms on TRAIN only to avoid leakage
+svd2 = TruncatedSVD(n_components=2, random_state=42)
+num2 = SkPipeline(steps=[("tfidf", tfidf), ("svd2", svd2)])
+
+X2_train = num2.fit_transform(X_train, y_train)
+X2_test  = num2.transform(X_test)
+
+qda2 = QuadraticDiscriminantAnalysis(reg_param=0.1)
+qda2.fit(X2_train, y_train)
+
+def _plot_qda_boundary(X2, y, clf, path, title):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    x_min, x_max = X2[:,0].min() - 1.0, X2[:,0].max() + 1.0
+    y_min, y_max = X2[:,1].min() - 1.0, X2[:,1].max() + 1.0
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, 300),
+        np.linspace(y_min, y_max, 300)
+    )
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+
+    plt.figure(figsize=(6.5,5))
+    plt.contourf(xx, yy, Z, alpha=0.20)  # default cmap; no colors specified
+    plt.scatter(X2[y==0,0], X2[y==0,1], s=10, label="ham")
+    plt.scatter(X2[y==1,0], X2[y==1,1], s=10, label="spam")
+    plt.title(title)
+    plt.xlabel("SVD component 1")
+    plt.ylabel("SVD component 2")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(path, dpi=150)
+    plt.close()
+
+print("==> Generating QDA boundary plots...")
+_plot_qda_boundary(X2_train, y_train, qda2, outdir / "qda_train_boundary.png",
+                   "QDA decision regions (train, SVD-2D)")
+_plot_qda_boundary(X2_test, y_test, qda2, outdir / "qda_test_boundary.png",
+                   "QDA decision regions (test, SVD-2D)")
+
+print("Saved:")
+print(" - outputs/figures/qda_train_boundary.png")
+print(" - outputs/figures/qda_test_boundary.png")
+
+# --- 7) ROC & PR curves for LDA and QDA (on test split) ----------------------
+from sklearn.metrics import roc_auc_score, RocCurveDisplay, PrecisionRecallDisplay, confusion_matrix
+import matplotlib.pyplot as plt
+
+# LDA probabilities
+proba_lda = lda_clf.predict_proba(X_test)[:, 1]
+auc_lda = roc_auc_score(y_test, proba_lda)
+
+RocCurveDisplay.from_predictions(y_test, proba_lda)
+plt.title(f"LDA ROC (AUC = {auc_lda:.3f})")
+plt.tight_layout()
+plt.savefig(outdir / "lda_roc.png", dpi=150)
+plt.close()
+
+PrecisionRecallDisplay.from_predictions(y_test, proba_lda)
+plt.title("LDA Precision–Recall")
+plt.tight_layout()
+plt.savefig(outdir / "lda_pr.png", dpi=150)
+plt.close()
+
+# QDA probabilities
+proba_qda = qda_clf.predict_proba(X_test)[:, 1]
+auc_qda = roc_auc_score(y_test, proba_qda)
+
+RocCurveDisplay.from_predictions(y_test, proba_qda)
+plt.title(f"QDA ROC (AUC = {auc_qda:.3f})")
+plt.tight_layout()
+plt.savefig(outdir / "qda_roc.png", dpi=150)
+plt.close()
+
+PrecisionRecallDisplay.from_predictions(y_test, proba_qda)
+plt.title("QDA Precision–Recall")
+plt.tight_layout()
+plt.savefig(outdir / "qda_pr.png", dpi=150)
+plt.close()
+
+print("Saved:")
+print(" - outputs/figures/lda_roc.png")
+print(" - outputs/figures/lda_pr.png")
+print(" - outputs/figures/qda_roc.png")
+print(" - outputs/figures/qda_pr.png")
+
