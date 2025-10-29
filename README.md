@@ -84,7 +84,7 @@ sms_svm_project/
 
 └─ test_smoke.py
 
-## Quick start (for reviewers)
+### HOW TO RUN
 
 ```bash
 git clone https://github.com/<yourorg>/Advanced-Statistical-Learning-Semester-Project.git
