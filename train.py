@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# add near the top of each script
 import argparse, yaml
 from pathlib import Path
 import joblib
