@@ -15,7 +15,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 import yaml
-
+import random
+import os
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
@@ -53,6 +54,9 @@ TEST_SIZE = float(PROJECT.get("test_size", 0.2))
 (OUT_DIR / "figures").mkdir(parents=True, exist_ok=True)
 
 
+np.random.seed(SEED)
+random.seed(SEED)
+os.environ["PYTHONHASHSEED"] = str(SEED)
 # ---------------------------------------------------------------------
 # DATA LOADING
 # ---------------------------------------------------------------------
