@@ -124,3 +124,27 @@ echo "==> DONE."
 echo "Models   -> outputs/models/"
 echo "Figures  -> outputs/figures/"
 echo "Bootstrap-> outputs/bootstrap_summary.csv"
+
+# --------------------------------------------------------------------
+# 5) Run training & bootstrap via env-runner (no activation)
+# --------------------------------------------------------------------
+if [[ $USE_MAMBA -eq 1 ]]; then
+  RUN="mamba run -n ${ENV_NAME}"
+elif have_cmd conda; then
+  RUN="conda run -n ${ENV_NAME}"
+else
+  RUN=""   # already in venv
+fi
+
+export PYTHONHASHSEED=42
+
+echo "==> Running training..."
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python scripts/train.py --config config/default.yaml
+
+echo "==> Running bootstrap evaluation..."
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python scripts/bootstrap_eval.py --config config/default.yaml
+
+echo '==> DONE.'
+echo 'Models   -> outputs/models/'
+echo 'Figures  -> outputs/figures/'
+echo 'Bootstrap-> outputs/bootstrap_summary.csv'
