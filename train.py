@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
+# add near the top of each script
+import argparse, yaml
 from pathlib import Path
 import joblib
 from src.preprocessing import load_or_download, stratified_split
 from src.models import make_pipelines
 from src.metrics import get_scores, plot_roc_pr
+
+def load_config():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default="config/default.yaml")
+    args = ap.parse_args()
+    with open(args.config, "r") as f:
+        return yaml.safe_load(f)
+
+CFG = load_config()
+
+
 
 OUT_MODELS = Path("outputs/models"); OUT_MODELS.mkdir(parents=True, exist_ok=True)
 OUT_FIGS = Path("outputs/figures"); OUT_FIGS.mkdir(parents=True, exist_ok=True)
