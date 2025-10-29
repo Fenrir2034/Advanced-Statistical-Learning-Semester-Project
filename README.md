@@ -100,3 +100,7 @@ chmod +x scripts/setup_env.sh
 chmod +x scripts/experiments.sh
 chmod +x scripts/run_all.sh
 
+built and run docker
+
+docker build -t asl-project .
+docker run --rm -v "$PWD/outputs":/app/outputs asl-project
