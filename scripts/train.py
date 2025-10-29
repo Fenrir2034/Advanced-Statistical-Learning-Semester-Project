@@ -14,7 +14,8 @@ import joblib
 import yaml
 import pandas as pd
 import numpy as np
-
+import random
+import os
 # Project utils
 from src.preprocessing import stratified_split, load_or_download
 from src.models import make_pipelines
@@ -43,6 +44,10 @@ OUT_REPORTS = Path(PROJECT.get("out_reports", "outputs/reports"))
 TEST_SIZE = float(PROJECT.get("test_size", 0.2))
 SEED = int(PROJECT.get("seed", 42))
 
+
+np.random.seed(SEED)
+random.seed(SEED)
+os.environ["PYTHONHASHSEED"] = str(SEED)
 # Ensure output dirs exist
 for p in [OUT_MODELS, OUT_FIGS, OUT_REPORTS]:
     p.mkdir(parents=True, exist_ok=True)
