@@ -94,3 +94,7 @@ by running:
 mamba env create -f environment.yml
 
 mamba activate advanced-statistical-learning
+
+chmod +x scripts/setup_env.sh
+chmod +x scripts/setup_env.sh
+
