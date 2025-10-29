@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
+# add near the top of each script
+import argparse, yaml
 from pathlib import Path
 import joblib
 import pandas as pd
 from src.preprocessing import load_or_download, stratified_split
 from src.metrics import get_scores
+
+def load_config():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default="config/default.yaml")
+    args = ap.parse_args()
+    with open(args.config, "r") as f:
+        return yaml.safe_load(f)
+
+CFG = load_config()
 
 MODELS_DIR = Path("outputs/models")
 
