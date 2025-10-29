@@ -1,1 +1,40 @@
+# Reproducible defaults for anyone running the project
+project:
+  seed: 42
+  out_dir: "outputs"
+  data_csv: "data/sms_spam.csv"
+
+data:
+  source: "openml"     # (openml | local)
+  openml_dataset: "sms_spam"  # OpenML name
+  test_size: 0.2
+  stratify: true
+
+preprocess:
+  lowercase: true
+  strip: true
+  remove_punct: true
+  remove_numbers: false
+  stopwords: "english"
+  vectorizer: "tfidf"  # (tfidf | bow)
+  max_features: 5000
+  ngram_range: [1, 2]
+
+models:
+  logistic_regression:
+    C: 2.0
+    penalty: "l2"
+    max_iter: 2000
+  linear_svm:
+    C: 1.0
+  rbf_svm:
+    C: 2.0
+    gamma: "scale"
+
+bootstrap:
+  n_boot: 200
+  metric: "roc_auc"
+
+plots:
+  dpi: 140
 
