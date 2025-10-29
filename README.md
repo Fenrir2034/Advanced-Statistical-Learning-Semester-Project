@@ -35,90 +35,44 @@ If the dataset is not present locally, it will be **automatically downloaded** b
 
 ---
 
-### Structure
-sms_svm_project/
+# Advanced Statistical Learning — SMS Spam Project
 
-├─ README.md
+This repository contains a fully reproducible pipeline to classify SMS messages as **ham** or **spam** using Python.  
+It includes **training**, **evaluation**, **bootstrap uncertainty estimation**, and **LDA/QDA visualizations**.  
+All paths and seeds are controlled via a YAML config file for full reproducibility — it runs identically on any system.
 
-├─ requirements.txt
+---
 
-├─ LICENSE
+## Features
 
-├─ .gitignore
+- TF–IDF text features with multiple classifiers:
+  - Logistic Regression  
+  - Linear SVM  
+  - Calibrated Linear SVM  
+  - Random Forest
+- Holdout metrics (Accuracy, F1, ROC AUC, PR AUC)
+- Bootstrap confidence intervals (test-set and refit bootstraps)
+- LDA/QDA 2-D projections (with optional SMOTE resampling)
+- One-command setup and execution
 
-├─ src/
+---
 
-│ ├─ preprocessing.py
+## Prerequisites
 
-│ ├─ models.py
+- **Git**
+- **Mamba / Conda** (recommended: [Miniforge](https://github.com/conda-forge/miniforge))
+- **Python 3.10–3.11**
 
-│ ├─ metrics.py
+> If you don’t have mamba, replace `mamba` with `conda` in all commands below.
 
-│ └─ visualization.py
+---
 
-├─ train.py
+## Quick Start (one command)
 
-├─ evaluate.py
-
-├─ bootstrap_eval.py
-
-├─ scripts/
-
-│ └─ run_experiments.sh
-
-├─ data/
-
-│ └─ (auto-downloaded) or place sms.csv with columns: label,text
-
-├─ outputs/
-
-│ ├─ models/
-
-│ └─ figures/
-
-├─ notebooks/
-
-│ └─ Exploration.ipynb
-
-└─ tests/
-
-└─ test_smoke.py
-
-### HOW TO RUN
+From the repo root, simply run:
 
 ```bash
-git clone https://github.com/<yourorg>/Advanced-Statistical-Learning-Semester-Project.git
-cd Advanced-Statistical-Learning-Semester-Project
-
-# Option A: conda/mamba
-./scripts/setup_env.sh
-conda activate advanced-statistical-learning
-./scripts/run_all.sh
-
-# Option B: Docker (no local Python needed)
-docker build -t asl-project .
-docker run --rm -v "$PWD/outputs":/app/outputs asl-project
-```
-This will:
-
-download the SMS Spam dataset into data/sms_spam.csv (first run)
-
-train models, run bootstrap, and evaluation
-
-write plots/metrics into outputs/
-### HOW TO RUN
-
-Run first the 'environement-requirements.yml' file in order to create the environement and install the requirements
-by running:
-
-
-mamba env create -f environment.yml
-
-mamba activate advanced-statistical-learning
-
-make the scripts executable by running
-chmod +x scripts/setup_env.sh
-chmod +x scripts/experiments.sh
+bash scripts/setup_and_run.sh
 chmod +x scripts/run_all.sh
 
 built and run docker
