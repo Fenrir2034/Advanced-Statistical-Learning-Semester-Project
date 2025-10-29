@@ -6,6 +6,13 @@ import joblib
 import pandas as pd
 from src.preprocessing import load_or_download, stratified_split
 from src.metrics import get_scores
+# --- ensure repo root is on sys.path ---
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+# ---------------------------------------
 
 def load_config():
     ap = argparse.ArgumentParser()

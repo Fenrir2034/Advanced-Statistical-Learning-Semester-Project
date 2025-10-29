@@ -8,7 +8,6 @@ Outputs:
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from pathlib import Path
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,7 +16,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from imblearn.over_sampling import SMOTE
-
+import matplotlib as plt
+plt.use("Agg")
 # ---------------------------
 # Settings / paths
 # ---------------------------

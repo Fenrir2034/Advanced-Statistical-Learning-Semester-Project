@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from imblearn.over_sampling import SMOTE
+import matplotlib as plt
+plt.use("Agg")
 
 # ----------------------------------------------------
 # 1. Load data

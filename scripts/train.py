@@ -17,6 +17,14 @@ import numpy as np
 import random
 import os
 # Project utils
+# --- ensure repo root is on sys.path ---
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+# ---------------------------------------
+
 from src.preprocessing import stratified_split, load_or_download
 from src.models import make_pipelines
 from src.metrics import get_scores, plot_roc_pr
