@@ -95,6 +95,8 @@ mamba env create -f environment.yml
 
 mamba activate advanced-statistical-learning
 
+make the scripts executable by running
 chmod +x scripts/setup_env.sh
-chmod +x scripts/setup_env.sh
+chmod +x scripts/experiments.sh
+chmod +x scripts/run_all.sh
 
