@@ -33,15 +33,6 @@ from the UCI Machine Learning Repository.
 
 If the dataset is not present locally, it will be **automatically downloaded** by the script.
 
----
-
-# Advanced Statistical Learning — SMS Spam Project
-
-This repository contains a fully reproducible pipeline to classify SMS messages as **ham** or **spam** using Python.  
-It includes **training**, **evaluation**, **bootstrap uncertainty estimation**, and **LDA/QDA visualizations**.  
-All paths and seeds are controlled via a YAML config file for full reproducibility — it runs identically on any system.
-
----
 
 ## Features
 
