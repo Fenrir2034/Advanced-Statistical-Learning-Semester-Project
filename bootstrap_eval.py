@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse, yaml
 import sys, math
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
 from pathlib import Path
@@ -13,6 +14,17 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
+
+
+def load_config():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default="config/default.yaml")
+    args = ap.parse_args()
+    with open(args.config, "r") as f:
+        return yaml.safe_load(f)
+
+CFG = load_config()
+
 
 def ensure_outputs():
     out = Path("outputs"); out.mkdir(exist_ok=True)
