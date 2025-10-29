@@ -64,9 +64,27 @@ From the repo root, simply run:
 
 ```bash
 bash scripts/setup_and_run.sh
+
 chmod +x scripts/run_all.sh
+```
+## Manual Setup
 
-built and run docker
-
-docker build -t asl-project .
-docker run --rm -v "$PWD/outputs":/app/outputs asl-project
+### Create & activate the environment
+```bash
+mamba env create -f environement-requirements.yml
+mamba activate advanced-statistical-learning    
+```
+### If you prefer pip:
+```bash    
+python -m venv .venv    
+source .venv/bin/activate    
+pip install -r requirements.txt
+```
+### Install project locally 
+```bash
+pip install -e 
+```
+### Enable SMOTE visualizations
+```bash
+pip install imbalanced-learn
+```
