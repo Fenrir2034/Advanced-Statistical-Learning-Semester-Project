@@ -63,9 +63,8 @@ If the dataset is not present locally, it will be **automatically downloaded** b
 From the repo root, simply run:
 
 ```bash
+chmod +x scripts/setup_and_run.sh
 bash scripts/setup_and_run.sh
-
-chmod +x scripts/run_all.sh
 ```
 ## Manual Setup
 
