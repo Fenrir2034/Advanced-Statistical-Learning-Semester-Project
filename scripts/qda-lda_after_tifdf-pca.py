@@ -200,3 +200,120 @@ print(" - outputs/figures/lda_pr.png")
 print(" - outputs/figures/qda_roc.png")
 print(" - outputs/figures/qda_pr.png")
 
+#!/usr/bin/env python3
+# scripts/TF-IDF_SVM_RBF.py
+
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import (
+    classification_report, confusion_matrix,
+    roc_auc_score, RocCurveDisplay, PrecisionRecallDisplay
+)
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from imblearn.pipeline import Pipeline
+from imblearn.over_sampling import SMOTE
+
+# --- Paths --------------------------------------------------------------------
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_PATH = PROJECT_ROOT / "data" / "sms_spam.csv"
+FIG_DIR = PROJECT_ROOT / "outputs" / "figures"
+MODEL_DIR = PROJECT_ROOT / "outputs" / "models"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+# --- Load data ----------------------------------------------------------------
+df = pd.read_csv(DATA_PATH)
+X = df["text"].astype(str)
+y = (df["label"].str.lower().str.strip() == "spam").astype(int)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+print(f"Train/Test sizes: {len(X_train)}, {len(X_test)}")
+print(f"Class balance (train): {y_train.value_counts().to_dict()}")
+
+# --- Pipeline -----------------------------------------------------------------
+tfidf = TfidfVectorizer(
+    lowercase=True,
+    stop_words="english",
+    max_df=0.95,
+    min_df=2,
+    ngram_range=(1, 2)
+)
+scaler = StandardScaler(with_mean=False)  # sparse safety
+smote = SMOTE(random_state=42)
+svm = SVC(kernel="rbf", probability=True, class_weight="balanced", random_state=42)
+
+pipe = Pipeline(steps=[
+    ("tfidf", tfidf),
+    ("smote", smote),
+    ("svm", svm)
+])
+
+param_grid = {
+    "svm__C": [0.1, 1, 10],
+    "svm__gamma": [1e-3, 1e-2, 1e-1]
+}
+
+grid = GridSearchCV(pipe, param_grid, scoring="f1", cv=5, n_jobs=-1, verbose=1)
+grid.fit(X_train, y_train)
+
+print(f"Best params: {grid.best_params_}")
+
+# --- Evaluation ---------------------------------------------------------------
+y_pred = grid.predict(X_test)
+proba = grid.predict_proba(X_test)[:, 1]
+roc_auc = roc_auc_score(y_test, proba)
+
+print("\n=== SVM (RBF) Report ===")
+print(classification_report(y_test, y_pred, digits=3))
+print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
+print(f"ROC AUC: {roc_auc:.4f}")
+
+# --- Save figures -------------------------------------------------------------
+RocCurveDisplay.from_predictions(y_test, proba)
+plt.title(f"SVM (RBF) ROC Curve (AUC = {roc_auc:.3f})")
+plt.tight_layout()
+plt.savefig(FIG_DIR / "svm_rbf_roc.png", dpi=150)
+plt.close()
+
+PrecisionRecallDisplay.from_predictions(y_test, proba)
+plt.title("SVM (RBF) Precision–Recall")
+plt.tight_layout()
+plt.savefig(FIG_DIR / "svm_rbf_pr.png", dpi=150)
+plt.close()
+
+cm = confusion_matrix(y_test, y_pred)
+fig, ax = plt.subplots(figsize=(4.2, 3.6))
+im = ax.imshow(cm, interpolation="nearest")
+ax.set_title("SVM (RBF) Confusion Matrix")
+ax.set_xlabel("Predicted"); ax.set_ylabel("True")
+ax.set_xticks([0,1]); ax.set_yticks([0,1])
+ax.set_xticklabels(["ham","spam"]); ax.set_yticklabels(["ham","spam"])
+for (i,j), v in np.ndenumerate(cm):
+    ax.text(j, i, str(v), ha="center", va="center")
+plt.tight_layout()
+plt.savefig(FIG_DIR / "svm_rbf_cm.png", dpi=150)
+plt.close()
+
+print("\nSaved SVM figures:")
+print(f" - {FIG_DIR / 'svm_rbf_roc.png'}")
+print(f" - {FIG_DIR / 'svm_rbf_pr.png'}")
+print(f" - {FIG_DIR / 'svm_rbf_cm.png'}")
+
+# --- Save model & params ------------------------------------------------------
+import joblib, json
+joblib.dump(grid.best_estimator_, MODEL_DIR / "svm_rbf.joblib")
+with open(MODEL_DIR / "svm_rbf_params.json", "w") as f:
+    json.dump(grid.best_params_, f, indent=2)
+
+print(f"Saved model to {MODEL_DIR / 'svm_rbf.joblib'}")
+print("==> DONE.")
