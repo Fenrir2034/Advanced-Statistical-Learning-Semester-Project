@@ -66,7 +66,11 @@ From the repo root, simply run:
 chmod +x scripts/setup_and_run.sh
 bash scripts/setup_and_run.sh
 ```
-## Manual Setup
+Confusion Matrices for LDA and QDA analysis are produced by utilising the following code.
+```bash
+python lda_qda_confmats.py
+```
+## Manual Setup if necassary
 
 ### Create & activate the environment
 ```bash
