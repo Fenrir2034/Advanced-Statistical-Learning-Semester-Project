@@ -66,6 +66,6 @@ plt.tight_layout()
 plt.savefig("outputs/figures/lda_smote.png", dpi=160)
 plt.close()
 
-print("✅ Saved LDA projections:")
+print(" Saved LDA projections:")
 print(" - outputs/figures/lda_original.png")
 print(" - outputs/figures/lda_smote.png")
