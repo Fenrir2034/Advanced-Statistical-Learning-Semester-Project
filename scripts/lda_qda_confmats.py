@@ -1,21 +1,39 @@
 #!/usr/bin/env python3
+"""
+Generate confusion matrices for LDA and QDA using the SAME text-preprocessing
+stack (TF-IDF -> TruncatedSVD -> StandardScaler) as the other scripts.
+Outputs go to: <repo-root>/outputs/figures/
+"""
+
+import sys
+from pathlib import Path
+
 import pandas as pd
+import matplotlib
+matplotlib.use("Agg")  # no GUI
 import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import sys
-from pathlib import Path
-ROOT = Path(__file__).resolve().parents[1]
-df = pd.read_csv(ROOT / "data/sms_spam.csv")
 
-# --- Load dataset ---
+# ---------------------------------------------------------------------
+# paths
+# ---------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parents[1]     # repo root
+DATA_PATH = ROOT / "data" / "sms_spam.csv"
+FIG_DIR = ROOT / "outputs" / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+# ---------------------------------------------------------------------
+# load data
+# ---------------------------------------------------------------------
+df = pd.read_csv(DATA_PATH)
 df["label"] = df["label"].map({"ham": 0, "spam": 1}).astype(int)
+
 X = df["text"]
 y = df["label"]
 
@@ -23,44 +41,58 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
-# --- Shared TF-IDF + SVD preproc ---
-vectorizer = TfidfVectorizer(lowercase=True, strip_accents="unicode",
-                             ngram_range=(1, 2), min_df=2, max_df=0.95)
+# ---------------------------------------------------------------------
+# shared preprocessing: TF-IDF -> SVD -> scaler
+# ---------------------------------------------------------------------
+vectorizer = TfidfVectorizer(
+    lowercase=True,
+    strip_accents="unicode",
+    ngram_range=(1, 2),
+    min_df=2,
+    max_df=0.95,
+)
 svd = TruncatedSVD(n_components=200, random_state=42)
 scaler = StandardScaler()
 
-def make_features(X_fit, X_apply):
-    X_fit_vec = vectorizer.fit_transform(X_fit)
-    X_apply_vec = vectorizer.transform(X_apply)
-    X_fit_red = svd.fit_transform(X_fit_vec)
-    X_apply_red = svd.transform(X_apply_vec)
-    X_fit_scaled = scaler.fit_transform(X_fit_red)
-    X_apply_scaled = scaler.transform(X_apply_red)
-    return X_fit_scaled, X_apply_scaled
+# fit on train, apply on train+test
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_test_tfidf = vectorizer.transform(X_test)
 
-X_train_prep, X_test_prep = make_features(X_train, X_test)
+X_train_svd = svd.fit_transform(X_train_tfidf)
+X_test_svd = svd.transform(X_test_tfidf)
 
-# --- Train models ---
+X_train_num = scaler.fit_transform(X_train_svd)
+X_test_num = scaler.transform(X_test_svd)
+
+# ---------------------------------------------------------------------
+# models
+# ---------------------------------------------------------------------
 lda = LinearDiscriminantAnalysis()
 qda = QuadraticDiscriminantAnalysis(reg_param=0.1)
 
-lda.fit(X_train_prep, y_train)
-qda.fit(X_train_prep, y_train)
+lda.fit(X_train_num, y_train)
+qda.fit(X_train_num, y_train)
 
-# --- Predict and compute confusion matrices ---
-lda_cm = confusion_matrix(y_test, lda.predict(X_test_prep))
-qda_cm = confusion_matrix(y_test, qda.predict(X_test_prep))
+# ---------------------------------------------------------------------
+# confusion matrices
+# ---------------------------------------------------------------------
+models = [
+    ("lda", lda),
+    ("qda", qda),
+]
 
-# --- Save figures ---
-fig_dir = Path("Advanced-Statistical-Learning-Semester-Project/outputs/figures")
-fig_dir.mkdir(parents=True, exist_ok=True)
-
-for model_name, cm in [("lda", lda_cm), ("qda", qda_cm)]:
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["ham", "spam"])
+for name, model in models:
+    y_pred = model.predict(X_test_num)
+    cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=["ham", "spam"],
+    )
     disp.plot(cmap="Purples", values_format="d", colorbar=False)
-    plt.title(f"{model_name.upper()} Confusion Matrix (test set)")
+    plt.title(f"{name.upper()} confusion matrix (test set)")
     plt.tight_layout()
-    plt.savefig(""outputs/f"{model_name}_cm.png", dpi=160) # Save figure
+    out_path = FIG_DIR / f"{name}_cm.png"
+    plt.savefig(out_path, dpi=160)
     plt.close()
 
-print("Saved LDA and QDA confusion matrices to: outputs/figures")
+print("Saved LDA and QDA confusion matrices to:", FIG_DIR)
