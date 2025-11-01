@@ -8,7 +8,7 @@ It demonstrates **text preprocessing**, **TF-IDF vectorization**, **model select
 
 ---
 
-## Project Overview
+## Introduction
 
 Spam filtering is a classic **binary classification** problem in Natural Language Processing (NLP).  
 Here, we build and compare several models to classify messages as **ham (legitimate)** or **spam (unwanted)**:
