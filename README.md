@@ -20,9 +20,9 @@ Here, we build and compare several models to classify messages as **ham (legitim
 Each model is tuned with **5-fold cross-validation**, then evaluated on a held-out test set.  
 Performance is visualized using **confusion matrices**, **ROC/PR curves**, and summary tables (AUC, AP).
 
-(images/Untitled.png)
+![generic_model](images/Untitled.png)
 
-(images/svm-data-classification.png)
+![svm_model](images/svm-data-classification.png)
 ---
 
 ## the Dataset
