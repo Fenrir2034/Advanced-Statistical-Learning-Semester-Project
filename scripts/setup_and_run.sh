@@ -18,8 +18,9 @@ elif ! have_cmd conda; then
 fi
 
 # 1) env ----------------------------------------------------------------
+# Setup environment and install required packages
 if [[ $USE_MAMBA -eq 1 ]]; then
-  echo "==> Ensuring mamba env '${ENV_NAME}' has all required packages..."
+  echo "==> Ensuring mamba env '${ENV_NAME}' has all required packages..."  # use mamba
   if mamba env list | grep -q "${ENV_NAME}"; then
     mamba run -n "${ENV_NAME}" python -m pip install --upgrade pip
     mamba run -n "${ENV_NAME}" pip install \
@@ -31,19 +32,19 @@ if [[ $USE_MAMBA -eq 1 ]]; then
       numpy pandas scikit-learn imbalanced-learn matplotlib seaborn pyyaml joblib tqdm
   fi
 elif have_cmd conda; then
-  echo "==> Ensuring conda env '${ENV_NAME}' has all required packages..."
+  echo "==> Ensuring conda env '${ENV_NAME}' has all required packages..."   # use conda
   if conda env list | grep -q "${ENV_NAME}"; then
     conda run -n "${ENV_NAME}" python -m pip install --upgrade pip
     conda run -n "${ENV_NAME}" pip install \
       numpy pandas scikit-learn imbalanced-learn matplotlib seaborn pyyaml joblib tqdm
   else
-    conda create -y -n "${ENV_NAME}" python=${PY_VER}
+    conda create -y -n "${ENV_NAME}" python=${PY_VER}                           # create env
     conda run -n "${ENV_NAME}" python -m pip install --upgrade pip
     conda run -n "${ENV_NAME}" pip install \
       numpy pandas scikit-learn imbalanced-learn matplotlib seaborn pyyaml joblib tqdm
   fi
 else
-  echo "==> Fallback: python venv + pip"
+  echo "==> Fallback: python venv + pip"                             # use python venv
   python3 -m venv .venv
   source .venv/bin/activate
   python -m pip install --upgrade pip
@@ -52,10 +53,10 @@ fi
 
 # 2) config -------------------------------------------------------------
 mkdir -p config
-if [[ ! -f config/default.yaml ]]; then
-  cat > config/default.yaml <<'YAML'
+if [[ ! -f config/default.yaml ]]; then   # create default config file in order to run scripts
+  cat > config/default.yaml <<'YAML' # default config file
 project:
-  data_csv: "data/sms_spam.csv"
+  data_csv: "data/sms_spam.csv" # path to dataset CSV
   out_dir: "outputs"
   seed: 42
   test_size: 0.2
@@ -66,7 +67,7 @@ YAML
 fi
 
 # 3) data ---------------------------------------------------------------
-mkdir -p data
+mkdir -p data # download SMS Spam dataset if not present
 if [[ ! -f data/sms_spam.csv ]]; then
   echo "==> Downloading SMS Spam dataset..."
   if [[ $USE_MAMBA -eq 1 ]]; then RUN="mamba run -n ${ENV_NAME}"; elif have_cmd conda; then RUN="conda run -n ${ENV_NAME}"; else RUN="python"; fi
@@ -84,10 +85,10 @@ PY
 fi
 
 # 4) outputs ------------------------------------------------------------
-mkdir -p outputs/models outputs/figures outputs/reports
+mkdir -p outputs/models outputs/figures outputs/reports # create output dirs
 
-# 5) choose runner ------------------------------------------------------
-if [[ $USE_MAMBA -eq 1 ]]; then
+# 5) choose runner ------------------------------------------------------ 
+if [[ $USE_MAMBA -eq 1 ]]; then 
   RUN="mamba run -n ${ENV_NAME}"
 elif have_cmd conda; then
   RUN="conda run -n ${ENV_NAME}"
@@ -100,6 +101,7 @@ export MPLBACKEND=Agg
 export QT_QPA_PLATFORM=xcb
 
 # 6) run pipelines ------------------------------------------------------
+# Run all pipelines sequentially
 echo "==> Running LDA/QDA text pipeline..."
 $RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/qda-lda_after_tifdf-pca.py" || true
 
@@ -114,6 +116,9 @@ $RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/evaluate.py" 
 
 echo "==> Bootstrap metrics..."
 $RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/bootstrap_eval.py" --config "config/default.yaml" || true
+
+echo "==> Confusion Matrices for LDA and QDA..."
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/lda_qda_confmats.py" --config "config/default.yaml" || true
 
 echo "==> DONE."
 echo "Figures  -> outputs/figures/"
