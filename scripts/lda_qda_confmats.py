@@ -60,7 +60,7 @@ for model_name, cm in [("lda", lda_cm), ("qda", qda_cm)]:
     disp.plot(cmap="Purples", values_format="d", colorbar=False)
     plt.title(f"{model_name.upper()} Confusion Matrix (test set)")
     plt.tight_layout()
-    plt.savefig(fig_dir / f"{model_name}_cm.png", dpi=150)
+    plt.savefig(""outputs/f"{model_name}_cm.png", dpi=160) # Save figure
     plt.close()
 
-print("Saved LDA and QDA confusion matrices to:", fig_dir)
+print("Saved LDA and QDA confusion matrices to: outputs/figures")
