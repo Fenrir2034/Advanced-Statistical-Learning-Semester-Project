@@ -1,0 +1,7 @@
+project:
+  data_csv: "data/sms_spam.csv" # path to dataset CSV
+  out_dir: "outputs"
+  seed: 42
+  test_size: 0.2
+  bootstrap_test_iters: 1000
+  bootstrap_refit_iters: 200

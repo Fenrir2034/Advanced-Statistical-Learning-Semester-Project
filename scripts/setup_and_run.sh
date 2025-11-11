@@ -1,3 +1,5 @@
+# Script to setup environment, download data, and run all pipelines sequentially
+#===============================================================================  
 #!/usr/bin/env bash
 set -euo pipefail
 
