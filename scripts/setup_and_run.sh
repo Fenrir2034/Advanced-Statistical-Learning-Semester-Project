@@ -21,7 +21,7 @@ fi
 
 # 1) env ----------------------------------------------------------------
 # Setup environment and install required packages
-if [[ $USE_MAMBA -eq 1 ]]; then
+if [[ $USE_MAMBA -eq 1 ]]; then # use mamba
   echo "==> Ensuring mamba env '${ENV_NAME}' has all required packages..."  # use mamba
   if mamba env list | grep -q "${ENV_NAME}"; then
     mamba run -n "${ENV_NAME}" python -m pip install --upgrade pip
@@ -57,7 +57,25 @@ fi
 mkdir -p config
 if [[ ! -f config/default.yaml ]]; then   # create default config file in order to run scripts
   cat > config/default.yaml <<'YAML' # default config file
-project:
+project: "SMS Spam Classification"
+model_type: "multi-model" # options: "multi-model", "lda-qda", "svm-rbf"
+models:
+  lda: {}
+  qda: {}
+  svm_rbf:
+    C: 1.0
+    gamma: "scale"
+  svm_linear:
+    C: 1.0
+preprocessing:
+  tfidf:
+    max_features: 5000
+    ngram_range: [1, 2]
+    stop_words: "english"
+  pca:
+    n_components: 100
+experiment: "experiment_1"
+paths:      
   data_csv: "data/sms_spam.csv" # path to dataset CSV
   out_dir: "outputs"
   seed: 42
@@ -70,8 +88,8 @@ fi
 
 # 3) data ---------------------------------------------------------------
 mkdir -p data # download SMS Spam dataset if not present
-if [[ ! -f data/sms_spam.csv ]]; then
-  echo "==> Downloading SMS Spam dataset..."
+if [[ ! -f data/sms_spam.csv ]]; then # download dataset
+  echo "==> Downloading SMS Spam dataset..." 
   if [[ $USE_MAMBA -eq 1 ]]; then RUN="mamba run -n ${ENV_NAME}"; elif have_cmd conda; then RUN="conda run -n ${ENV_NAME}"; else RUN="python"; fi
   $RUN python - <<'PY'
 import zipfile, io, urllib.request, pandas as pd, pathlib
@@ -90,7 +108,7 @@ fi
 mkdir -p outputs/models outputs/figures outputs/reports # create output dirs
 
 # 5) choose runner ------------------------------------------------------ 
-if [[ $USE_MAMBA -eq 1 ]]; then 
+if [[ $USE_MAMBA -eq 1 ]]; then  # use mamba
   RUN="mamba run -n ${ENV_NAME}"
 elif have_cmd conda; then
   RUN="conda run -n ${ENV_NAME}"
@@ -104,14 +122,14 @@ export QT_QPA_PLATFORM=xcb
 
 # 6) run pipelines ------------------------------------------------------
 # Run all pipelines sequentially
-echo "==> Running LDA/QDA text pipeline..."
-$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/qda-lda_after_tifdf-pca.py" || true
+echo "==> Running LDA/QDA text pipeline..." # run LDA/QDA pipeline
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/qda-lda_after_tifdf-pca.py" || true # run qda-lda pipeline, continue on error
 
 echo "==> Running SVM (RBF) text pipeline..."
-$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/TF-IDF_SVM_RBF.py" || true
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/TF-IDF_SVM_RBF.py" || true 
 
 echo "==> Training (multi-model)..."
-$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/train.py" --config "config/default.yaml" || true
+$RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/train.py" --config "config/default.yaml" || true 
 
 echo "==> Evaluation summary..."
 $RUN env PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}" python "scripts/evaluate.py" --config "config/default.yaml" || true
