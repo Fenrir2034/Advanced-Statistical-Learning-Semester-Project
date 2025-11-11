@@ -10,19 +10,19 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from imblearn.over_sampling import SMOTE
+from sklearn.feature_extraction.text import TfidfVectorizer # text to numeric
+from sklearn.decomposition import TruncatedSVD # dimensionality reduction
+from sklearn.pipeline import make_pipeline # pipeline for chaining transformations
+from sklearn.preprocessing import StandardScaler # feature scaling
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis # QDA model
+from imblearn.over_sampling import SMOTE # SMOTE for balancing classes
 import matplotlib as plt
 plt.use("Agg")
 # ---------------------------
 # Settings / paths
 # ---------------------------
-DATA_CSV = Path("data/sms_spam.csv")
-OUT_DIR = Path("outputs/figures"); OUT_DIR.mkdir(parents=True, exist_ok=True)
+DATA_CSV = Path("data/sms_spam.csv") # data path
+OUT_DIR = Path("outputs/figures"); OUT_DIR.mkdir(parents=True, exist_ok=True) # ensure output dir exists
 SEED = 42
 SVD_DIM = 50          # reduce TF-IDF to something QDA can handle
 QDA_REG = 0.05        # slight shrinkage for numerical stability
@@ -31,15 +31,15 @@ JITTER = 0.01         # vertical jitter so points don't overlap
 # ---------------------------
 # Helpers
 # ---------------------------
-def load_sms(csv_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
+def load_sms(csv_path: Path) -> pd.DataFrame: # load SMS spam data
+    df = pd.read_csv(csv_path) # read CSV
     assert {"label","text"}.issubset(df.columns), "CSV must have columns: label,text"
     y = df["label"]
     if y.dtype == object:
         y = y.map({"ham":0, "spam":1}).astype(int)
     return df["text"], y.values
 
-def build_text_svd():
+def build_text_svd(): # build text processing pipeline
     """TF-IDF (1–2 grams) -> TruncatedSVD -> Standardize."""
     tfidf = TfidfVectorizer(lowercase=True, strip_accents="unicode",
                             ngram_range=(1,2), min_df=2, max_df=0.95)
@@ -47,7 +47,7 @@ def build_text_svd():
     std = StandardScaler(with_mean=False)  # SVD is dense but still ok to use with_mean=False
     return make_pipeline(tfidf, svd, std)
 
-def qda_scores(X_lowdim, y):
+def qda_scores(X_lowdim, y): # fit QDA and get log-odds scores
     """Fit QDA and return signed log-odds scores for class 1 (spam)."""
     qda = QuadraticDiscriminantAnalysis(reg_param=QDA_REG)
     qda.fit(X_lowdim, y)
@@ -57,7 +57,7 @@ def qda_scores(X_lowdim, y):
     scores = np.log((p1 + eps) / (1 - p1 + eps))
     return scores, qda
 
-def scatter_1d(scores, y, title, outfile):
+def scatter_1d(scores, y, title, outfile): # scatter plot of 1D scores
     x = scores
     # place ham and spam around y=0 with tiny vertical jitter
     y_pos = np.zeros_like(x, dtype=float)
@@ -78,28 +78,28 @@ def scatter_1d(scores, y, title, outfile):
 # ---------------------------
 # Main
 # ---------------------------
-def main():
-    X_text, y = load_sms(DATA_CSV)
+def main(): # main function
+    X_text, y = load_sms(DATA_CSV) # load data
 
     # 1) Original data
-    text_svd = build_text_svd()
-    X_low = text_svd.fit_transform(X_text)
-    scores, _ = qda_scores(X_low, y)
+    text_svd = build_text_svd() # build text -> SVD pipeline
+    X_low = text_svd.fit_transform(X_text) # fit and transform to low-dim space
+    scores, _ = qda_scores(X_low, y) # fit QDA and get scores
     scatter_1d(scores, y,
                "QDA: Quadratic Discriminant 'projection' (original data)",
                OUT_DIR / "qda_original.png")
 
     # 2) SMOTEd data (balance classes in low-dim space)
-    smote = SMOTE(random_state=SEED)
-    X_low_sm, y_sm = smote.fit_resample(X_low, y)
-    scores_sm, _ = qda_scores(X_low_sm, y_sm)
-    scatter_1d(scores_sm, y_sm,
-               "QDA Projection of SMS Data (SMOTEd data)",
-               OUT_DIR / "qda_smote.png")
+    smote = SMOTE(random_state=SEED) # SMOTE instance
+    X_low_sm, y_sm = smote.fit_resample(X_low, y) # apply SMOTE
+    scores_sm, _ = qda_scores(X_low_sm, y_sm) # fit QDA and get scores
+    scatter_1d(scores_sm, y_sm, # plot SMOTEd scores
+               "QDA Projection of SMS Data (SMOTEd data)", # title
+               OUT_DIR / "qda_smote.png") # output path
 
-    print("✅ Saved:")
-    print(" -", OUT_DIR / "qda_original.png")
-    print(" -", OUT_DIR / "qda_smote.png")
+    print("Saved:") # print output paths
+    print(" -", OUT_DIR / "qda_original.png") # original data
+    print(" -", OUT_DIR / "qda_smote.png") # SMOTEd data
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     main()
