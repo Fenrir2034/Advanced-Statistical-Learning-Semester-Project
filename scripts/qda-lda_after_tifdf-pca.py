@@ -4,18 +4,18 @@ from pathlib import Path
 from collections import Counter
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.model_selection import train_test_split # train/test split
+from sklearn.metrics import classification_report, confusion_matrix # evaluation metrics
+from sklearn.feature_extraction.text import TfidfVectorizer # text to numeric
+from sklearn.decomposition import TruncatedSVD  # dimensionality reduction
+from sklearn.preprocessing import StandardScaler # feature scaling
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis # LDA and QDA
 from sklearn.pipeline import Pipeline as SkPipeline  # for the projection plots
 
-from imblearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline # for building pipelines with SMOTE we need it beacuse thwe normal sklearn one does not support it
 from imblearn.over_sampling import SMOTE
 
-import matplotlib
+import matplotlib 
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
 
@@ -39,63 +39,63 @@ X_train, X_test, y_train, y_test = train_test_split(
 print("Class balance (train/test):", Counter(y_train), Counter(y_test))
 
 # --- 2) TF-IDF -> SVD -> Standardize -----------------------------------------
-tfidf = TfidfVectorizer(
-    lowercase=True,
-    stop_words="english",
-    max_df=0.95,
-    min_df=2,
-    ngram_range=(1, 2),
+tfidf = TfidfVectorizer( # TF-IDF vectorizer
+    lowercase=True, #   make lowercase
+    stop_words="english", #   remove English stopwords
+    max_df=0.95, #   ignore very common words
+    min_df=2, #   ignore very rare words
+    ngram_range=(1, 2), #   unigrams + bigrams: single words and pairs of consecutive words
 )
-svd = TruncatedSVD(n_components=200, random_state=42)
-scaler = StandardScaler()
+svd = TruncatedSVD(n_components=200, random_state=42) # SVD to reduce dimensionality
+scaler = StandardScaler() # standard scaler to normalize features
 
 # --- 3) LDA pipeline with SMOTE ----------------------------------------------
-lda_clf = Pipeline(steps=[
-    ("tfidf", tfidf),
-    ("svd", svd),
-    ("scaler", scaler),
-    ("smote", SMOTE(random_state=42)),
-    ("lda", LinearDiscriminantAnalysis())
+lda_clf = Pipeline(steps=[ # create pipeline
+    ("tfidf", tfidf), #   TF-IDF step
+    ("svd", svd), #   SVD step
+    ("scaler", scaler), #   scaling step
+    ("smote", SMOTE(random_state=42)), #   SMOTE step for balancing classes
+    ("lda", LinearDiscriminantAnalysis()) #   LDA step
 ])
 
-lda_clf.fit(X_train, y_train)
-y_pred_lda = lda_clf.predict(X_test)
-print("\n=== LDA report ===")
-print(classification_report(y_test, y_pred_lda, digits=3))
+lda_clf.fit(X_train, y_train) # fit the pipeline
+y_pred_lda = lda_clf.predict(X_test) # predict on test set
+print("\n=== LDA report ===") 
+print(classification_report(y_test, y_pred_lda, digits=3)) # print classification report
 print(confusion_matrix(y_test, y_pred_lda))
 
 # --- 4) QDA pipeline with SMOTE ----------------------------------------------
-qda_clf = Pipeline(steps=[
-    ("tfidf", tfidf),
-    ("svd", svd),
-    ("scaler", scaler),
-    ("smote", SMOTE(random_state=42)),
-    ("qda", QuadraticDiscriminantAnalysis(reg_param=0.1))
+qda_clf = Pipeline(steps=[ #        create pipeline
+    ("tfidf", tfidf),   #   TF-IDF step
+    ("svd", svd),       #   SVD step
+    ("scaler", scaler), #   scaling step
+    ("smote", SMOTE(random_state=42)),  #   SMOTE step for balancing classes
+    ("qda", QuadraticDiscriminantAnalysis(reg_param=0.1))   #   QDA step with regularization
 ])
 
-qda_clf.fit(X_train, y_train)
-y_pred_qda = qda_clf.predict(X_test)
+qda_clf.fit(X_train, y_train) # fit the pipeline
+y_pred_qda = qda_clf.predict(X_test) # predict on test set
 print("\n=== QDA report ===")
-print(classification_report(y_test, y_pred_qda, digits=3))
-print(confusion_matrix(y_test, y_pred_qda))
+print(classification_report(y_test, y_pred_qda, digits=3))  # print classification report
+print(confusion_matrix(y_test, y_pred_qda))         # print confusion matrix
 
 # --- 5) Visualize the 1D LDA projection as histograms ------------------------
 # Always save under the project root, not the scripts directory
-project_root = Path(__file__).resolve().parents[1]
-outdir = project_root / "outputs" / "figures"
-outdir.mkdir(parents=True, exist_ok=True)
+project_root = Path(__file__).resolve().parents[1] # repo root
+outdir = project_root / "outputs" / "figures" # output directory
+outdir.mkdir(parents=True, exist_ok=True) # ensure output dir exists
 
 
-num_transform = SkPipeline(steps=[("tfidf", tfidf), ("svd", svd), ("scaler", scaler)])
+num_transform = SkPipeline(steps=[("tfidf", tfidf), ("svd", svd), ("scaler", scaler)]) # numeric transformation pipeline
 X_train_num = num_transform.fit_transform(X_train, y_train)  # fit on train only
-X_test_num  = num_transform.transform(X_test)
+X_test_num  = num_transform.transform(X_test)          # transform test
 
-lda = LinearDiscriminantAnalysis(n_components=1)
-lda.fit(X_train_num, y_train)
-z_train = lda.transform(X_train_num).ravel()
-z_test  = lda.transform(X_test_num).ravel()
+lda = LinearDiscriminantAnalysis(n_components=1) # LDA for 1D projection
+lda.fit(X_train_num, y_train) # fit LDA on train only
+z_train = lda.transform(X_train_num).ravel() # project train data
+z_test  = lda.transform(X_test_num).ravel() # project test data
 
-plt.figure(figsize=(7,4))
+plt.figure(figsize=(7,4)) 
 plt.hist(z_train[y_train==0], bins=30, alpha=0.6, label="ham (train)", density=True)
 plt.hist(z_train[y_train==1], bins=30, alpha=0.6, label="spam (train)", density=True)
 plt.title("LDA 1D projection (train)")
@@ -115,17 +115,17 @@ print(" - outputs/figures/lda_test_hist.png")
 
 # --- 6) QDA decision boundaries in 2D (via SVD to 2 comps) -------------------
 # Fit transforms on TRAIN only to avoid leakage
-svd2 = TruncatedSVD(n_components=2, random_state=42)
-num2 = SkPipeline(steps=[("tfidf", tfidf), ("svd2", svd2)])
+svd2 = TruncatedSVD(n_components=2, random_state=42) # SVD to 2 components
+num2 = SkPipeline(steps=[("tfidf", tfidf), ("svd2", svd2)]) # numeric transformation pipeline to 2D
 
-X2_train = num2.fit_transform(X_train, y_train)
-X2_test  = num2.transform(X_test)
+X2_train = num2.fit_transform(X_train, y_train) # fit on train
+X2_test  = num2.transform(X_test)        # transform test
 
-qda2 = QuadraticDiscriminantAnalysis(reg_param=0.1)
-qda2.fit(X2_train, y_train)
+qda2 = QuadraticDiscriminantAnalysis(reg_param=0.1) # QDA with regularization
+qda2.fit(X2_train, y_train) # fit QDA on train
 
-def _plot_qda_boundary(X2, y, clf, path, title):
-    import numpy as np
+def _plot_qda_boundary(X2, y, clf, path, title): # plot QDA decision boundary
+    import numpy as np 
     import matplotlib.pyplot as plt
 
     x_min, x_max = X2[:,0].min() - 1.0, X2[:,0].max() + 1.0
@@ -163,32 +163,32 @@ from sklearn.metrics import roc_auc_score, RocCurveDisplay, PrecisionRecallDispl
 import matplotlib.pyplot as plt
 
 # LDA probabilities
-proba_lda = lda_clf.predict_proba(X_test)[:, 1]
-auc_lda = roc_auc_score(y_test, proba_lda)
+proba_lda = lda_clf.predict_proba(X_test)[:, 1] # get probabilities for class 1 (spam)
+auc_lda = roc_auc_score(y_test, proba_lda) # compute AUC
 
-RocCurveDisplay.from_predictions(y_test, proba_lda)
-plt.title(f"LDA ROC (AUC = {auc_lda:.3f})")
+RocCurveDisplay.from_predictions(y_test, proba_lda) # plot ROC curve
+plt.title(f"LDA ROC (AUC = {auc_lda:.3f})") # title
 plt.tight_layout()
 plt.savefig(outdir / "lda_roc.png", dpi=150)
 plt.close()
 
-PrecisionRecallDisplay.from_predictions(y_test, proba_lda)
+PrecisionRecallDisplay.from_predictions(y_test, proba_lda) # plot PR curve
 plt.title("LDA Precision–Recall")
 plt.tight_layout()
 plt.savefig(outdir / "lda_pr.png", dpi=150)
 plt.close()
 
 # QDA probabilities
-proba_qda = qda_clf.predict_proba(X_test)[:, 1]
+proba_qda = qda_clf.predict_proba(X_test)[:, 1] # get probabilities for class 1 (spam)
 auc_qda = roc_auc_score(y_test, proba_qda)
 
-RocCurveDisplay.from_predictions(y_test, proba_qda)
+RocCurveDisplay.from_predictions(y_test, proba_qda) # plot ROC curve
 plt.title(f"QDA ROC (AUC = {auc_qda:.3f})")
 plt.tight_layout()
 plt.savefig(outdir / "qda_roc.png", dpi=150)
 plt.close()
 
-PrecisionRecallDisplay.from_predictions(y_test, proba_qda)
+PrecisionRecallDisplay.from_predictions(y_test, proba_qda) # plot PR curve
 plt.title("QDA Precision–Recall")
 plt.tight_layout()
 plt.savefig(outdir / "qda_pr.png", dpi=150)
@@ -240,8 +240,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 print(f"Train/Test sizes: {len(X_train)}, {len(X_test)}")
 print(f"Class balance (train): {y_train.value_counts().to_dict()}")
 
-# --- Pipeline -----------------------------------------------------------------
-tfidf = TfidfVectorizer(
+# --- Pipeline ----------------------------------------------------------------- sameeee
+tfidf = TfidfVectorizer( 
     lowercase=True,
     stop_words="english",
     max_df=0.95,
@@ -269,30 +269,30 @@ grid.fit(X_train, y_train)
 print(f"Best params: {grid.best_params_}")
 
 # --- Evaluation ---------------------------------------------------------------
-y_pred = grid.predict(X_test)
-proba = grid.predict_proba(X_test)[:, 1]
-roc_auc = roc_auc_score(y_test, proba)
+y_pred = grid.predict(X_test) # predict on test set
+proba = grid.predict_proba(X_test)[:, 1] # probabilities for class 1 (spam)
+roc_auc = roc_auc_score(y_test, proba) # compute AUC
 
 print("\n=== SVM (RBF) Report ===")
-print(classification_report(y_test, y_pred, digits=3))
-print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
-print(f"ROC AUC: {roc_auc:.4f}")
+print(classification_report(y_test, y_pred, digits=3)) # print classification report
+print("Confusion matrix:\n", confusion_matrix(y_test, y_pred)) # print confusion matrix
+print(f"ROC AUC: {roc_auc:.4f}") # print AUC
 
 # --- Save figures -------------------------------------------------------------
-RocCurveDisplay.from_predictions(y_test, proba)
+RocCurveDisplay.from_predictions(y_test, proba) # plot ROC curve
 plt.title(f"SVM (RBF) ROC Curve (AUC = {roc_auc:.3f})")
 plt.tight_layout()
 plt.savefig(FIG_DIR / "svm_rbf_roc.png", dpi=150)
 plt.close()
 
-PrecisionRecallDisplay.from_predictions(y_test, proba)
+PrecisionRecallDisplay.from_predictions(y_test, proba) # plot PR curve
 plt.title("SVM (RBF) Precision–Recall")
 plt.tight_layout()
 plt.savefig(FIG_DIR / "svm_rbf_pr.png", dpi=150)
 plt.close()
 
-cm = confusion_matrix(y_test, y_pred)
-fig, ax = plt.subplots(figsize=(4.2, 3.6))
+cm = confusion_matrix(y_test, y_pred) # confusion matrix
+fig, ax = plt.subplots(figsize=(4.2, 3.6)) 
 im = ax.imshow(cm, interpolation="nearest")
 ax.set_title("SVM (RBF) Confusion Matrix")
 ax.set_xlabel("Predicted"); ax.set_ylabel("True")
@@ -310,10 +310,10 @@ print(f" - {FIG_DIR / 'svm_rbf_pr.png'}")
 print(f" - {FIG_DIR / 'svm_rbf_cm.png'}")
 
 # --- Save model & params ------------------------------------------------------
-import joblib, json
-joblib.dump(grid.best_estimator_, MODEL_DIR / "svm_rbf.joblib")
-with open(MODEL_DIR / "svm_rbf_params.json", "w") as f:
-    json.dump(grid.best_params_, f, indent=2)
+import joblib, json # save model and params
+joblib.dump(grid.best_estimator_, MODEL_DIR / "svm_rbf.joblib") # save model
+with open(MODEL_DIR / "svm_rbf_params.json", "w") as f: # save params
+    json.dump(grid.best_params_, f, indent=2) # write params to JSON
 
 print(f"Saved model to {MODEL_DIR / 'svm_rbf.joblib'}")
 print("==> DONE.")
