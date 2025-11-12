@@ -58,7 +58,6 @@ X_train, X_test, y_train, y_test = train_test_split( # train-test split
 
 # === 3. Preprocessing Pipeline ===============================================
 # TF–IDF: turn text → numerical features (1–2 grams)
-# NOTE (FIX): do NOT reuse the exact same transformer instances across multiple pipelines,
 # otherwise they may overwrite each other's fitted state. Use small helpers to create fresh ones.
 
 def make_tfidf():
